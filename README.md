@@ -9,11 +9,16 @@ Sirius Boilerplate is a backend system built with NestJS, TypeScript, and Postgr
 - [Installation](#installation)
 - [Configuration](#configuration)
 - [Running the Application](#running-the-application)
-- [API Endpoints](#api-endpoints)
-- [Testing](#testing)
+- [Running Tests](#running-tests)
+- [Docker](#docker)
 - [Project Structure](#project-structure)
-- [Contributing](#contributing)
-- [License](#license)
+
+## Features
+
+- User management with single table inheritance
+- API endpoints with input validation
+- End-to-end testing
+- Docker support
 
 ## Tech Stack
 
@@ -22,6 +27,7 @@ Sirius Boilerplate is a backend system built with NestJS, TypeScript, and Postgr
 - **Database:** [PostgreSQL](https://www.postgresql.org/)
 - **ORM:** [TypeORM](https://typeorm.io/)
 - **Testing:** [Jest](https://jestjs.io/), [Supertest](https://github.com/visionmedia/supertest)
+- **Containerization:** [Docker](https://www.docker.com/)
 
 ## Installation
 
@@ -35,7 +41,13 @@ Sirius Boilerplate is a backend system built with NestJS, TypeScript, and Postgr
 2. **Install Dependencies:**
 
    ```bash
-   npm install
+   npm install 
+   ```
+
+3. **Copy Environment Variables:**
+
+   ```bash
+   cp .env.sample .env
    ```
 
 ## Configuration
@@ -60,10 +72,48 @@ Start the application in development mode:
 npm run start:dev
 ```
 
-## Running End-to-End Tests
+## Running Tests
+
+### Unit Tests
+
+Run the unit tests using Jest:
+
+```bash
+npm run test
+```
+
+### End-to-End Tests
 
 Run the end-to-end tests using Jest:
 
 ```bash
 npm run test:e2e
 ```
+
+## Docker
+
+### Build Docker Image
+
+Build the Docker image for the application:
+
+```bash
+docker build -t sirius:latest .
+```
+
+### Using Docker Compose
+
+Start the application using Docker Compose:
+
+```bash
+docker-compose up --build
+```
+
+## Swagger
+
+Swagger documentation is available in development mode at `/api-docs`. Note that Swagger is not available in production mode (`NODE_ENV=production`).
+
+## Project Structure
+
+- **src/**: Source code of the application
+- **test/**: Test files for unit and end-to-end tests
+- **.github/**: GitHub Actions workflows
