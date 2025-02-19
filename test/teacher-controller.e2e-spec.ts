@@ -1,9 +1,12 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe, HttpStatus } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
+import { ClassSerializerInterceptor } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 
 describe('TeacherController (e2e)', () => {
   let app: INestApplication;
@@ -17,6 +20,9 @@ describe('TeacherController (e2e)', () => {
     app = moduleFixture.createNestApplication();
     // Enable global validation
     app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
+    app.useGlobalInterceptors(
+      new ClassSerializerInterceptor(app.get(Reflector)),
+    );
     await app.init();
   });
 
@@ -42,6 +48,31 @@ describe('TeacherController (e2e)', () => {
       expect(response.body).toHaveProperty('id');
       expect(response.body.firstName).toBe(teacherDto.firstName);
       createdTeacherId = response.body.id;
+    });
+
+    it('POST /teachers - should hash the password and not return it', async () => {
+      const teacherDto = {
+        firstName: 'John',
+        lastName: 'Smith',
+        password: 'mysecretpassword',
+        instrument: 'Drums',
+        experience: 8,
+      };
+
+      const response = await request(app.getHttpServer())
+        .post('/teachers')
+        .send(teacherDto)
+        .expect(HttpStatus.CREATED);
+
+      expect(response.body).toHaveProperty('id');
+      expect(response.body.firstName).toBe(teacherDto.firstName);
+      expect(response.body).not.toHaveProperty('password');
+
+      const teacherResponse = await request(app.getHttpServer())
+        .get(`/teachers/${response.body.id}`)
+        .expect(HttpStatus.OK);
+
+      expect(teacherResponse.body).not.toHaveProperty('password');
     });
 
     it('GET /teachers - should return an array of teachers', async () => {

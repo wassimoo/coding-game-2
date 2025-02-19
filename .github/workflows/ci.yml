@@ -66,3 +66,6 @@ jobs:
         with:
           name: e2e-coverage
           path: ./coverage-e2e
+
+      - name: Build Docker Image
+        run: docker build -t sirius:latest .

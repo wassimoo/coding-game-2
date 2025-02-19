@@ -1,9 +1,16 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe, HttpStatus } from '@nestjs/common';
+import {
+  INestApplication,
+  ValidationPipe,
+  HttpStatus,
+  ClassSerializerInterceptor,
+} from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
+import { Reflector } from '@nestjs/core';
 
 describe('StudentController (e2e)', () => {
   let app: INestApplication;
@@ -18,6 +25,9 @@ describe('StudentController (e2e)', () => {
     app = moduleFixture.createNestApplication();
     // Enable global validation
     app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
+    app.useGlobalInterceptors(
+      new ClassSerializerInterceptor(app.get(Reflector)),
+    );
     await app.init();
 
     // Create a teacher to be assigned to the student
@@ -56,6 +66,30 @@ describe('StudentController (e2e)', () => {
       expect(response.body).toHaveProperty('id');
       expect(response.body.firstName).toBe(studentDto.firstName);
       createdStudentId = response.body.id;
+    });
+
+    it('POST /students - should hash the password and not return it', async () => {
+      const studentDto = {
+        firstName: 'Alice',
+        lastName: 'Wonderland',
+        password: 'secret123',
+        instrument: 'Piano',
+      };
+
+      const response = await request(app.getHttpServer())
+        .post('/students')
+        .send(studentDto)
+        .expect(HttpStatus.CREATED);
+
+      expect(response.body).toHaveProperty('id');
+      expect(response.body.firstName).toBe(studentDto.firstName);
+      expect(response.body).not.toHaveProperty('password');
+
+      const studentResponse = await request(app.getHttpServer())
+        .get(`/students/${response.body.id}`)
+        .expect(HttpStatus.OK);
+
+      expect(studentResponse.body).not.toHaveProperty('password');
     });
 
     it('GET /students - should return an array of students', async () => {
